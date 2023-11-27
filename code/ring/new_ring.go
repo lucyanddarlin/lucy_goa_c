@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 // 每个 Node 节点, 包含前向和后向两个指针和数据域
 type Node struct {
 	next  *Node
@@ -23,6 +25,17 @@ func (l *LinkedList) Init() *LinkedList {
 	l.root.prev = &l.root
 	l.length = 0
 	return l
+}
+
+func (l *LinkedList) LazyInit() {
+	if l.root.next == nil {
+		l.Init()
+	}
+}
+
+// Len 返回链表的长度
+func (l *LinkedList) Len() int {
+	return l.length
 }
 
 // insert 在指定节点后面插入节点
@@ -52,6 +65,108 @@ func (l *LinkedList) remove(e *Node) {
 	l.length--
 }
 
-func main() {
+// RangeSafe 从前向后遍历
+//
+//	callback 返回 true 就停止遍历
+func (l *LinkedList) RangeSafe(callback func(e *Node) (exit bool)) {
+	pos := l.root.next
+	n := pos.next
 
+	for pos != &l.root {
+		if callback(pos) {
+			break
+		}
+
+		pos = n
+		n = pos.next
+	}
+}
+
+// BackRangeSafe 从后向前遍历
+//
+//	callback 返回 true 就停止遍历
+func (l *LinkedList) BackRangeSafe(callback func(e *Node) (exit bool)) {
+	pos := l.root.prev
+	n := pos.prev
+
+	for pos != &l.root {
+		if callback(pos) {
+			break
+		}
+
+		pos = n
+		n = pos.prev
+	}
+}
+
+// Clear 清空链表
+func (l *LinkedList) Clear() {
+	l.RangeSafe(func(e *Node) (exit bool) {
+		l.remove(e)
+		return false
+	})
+}
+
+// ToSlice 将链表转化为 slice
+func (l *LinkedList) ToSlice() []any {
+	if l.length == 0 {
+		return nil
+	}
+
+	rv := make([]any, 0, l.length)
+	for pos := l.root.next; pos != &l.root; pos = pos.next {
+		rv = append(rv, pos.Value)
+	}
+
+	return rv
+}
+
+// testRangeSafe 测试正向遍历
+func testRangeSafe(l *LinkedList) {
+	fmt.Println("--------")
+	l.RangeSafe(func(e *Node) (exit bool) {
+		fmt.Println(e.Value)
+		return false
+	})
+}
+
+// testBackRangeSafe 测试反向遍历
+func testBackRangeSafe(l *LinkedList) {
+	fmt.Println("--------")
+	l.BackRangeSafe(func(e *Node) (exit bool) {
+		fmt.Println(e.Value)
+		return false
+	})
+}
+
+// testInsert 测试插入
+func testInsert(l *LinkedList) {
+	e1 := &Node{Value: 1}
+	e2 := &Node{Value: 2}
+	l.insert(&l.root, e1)
+	l.insert(e1, e2)
+}
+
+// testClear 测试清空
+func testClear(l *LinkedList) {
+	l.Clear()
+}
+
+// testToSlice 测试 Slice 转换
+func testToSlice(l *LinkedList) {
+	fmt.Println("to slice", l.ToSlice())
+
+}
+
+func main() {
+	l := new(LinkedList)
+	l.Init()
+
+	testInsert(l)
+	testRangeSafe(l)
+	testBackRangeSafe(l)
+	testToSlice(l)
+	testClear(l)
+
+	fmt.Println("Link l's length is: ", l.Len())
 }
