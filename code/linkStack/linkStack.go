@@ -69,7 +69,7 @@ func (stack *LinkArray) Size() int {
 
 // ToSlice 将链表转换为 slice
 func (stack *LinkArray) ToSlice() []string {
-	nextSlice := make([]string, stack.Size())
+	nextSlice := make([]string, 0, stack.Size())
 
 	if stack.IsEmpty() {
 		return nextSlice
